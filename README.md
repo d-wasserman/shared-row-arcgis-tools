@@ -12,3 +12,9 @@ The tools contained within this repository are documented below.
 * 3_Generate_Crosswalk_File - This tool will create a crosswalk feature class where an Additive Specification Feature Class will be converted into a flat table where the geometry is repeated, and each "slice" is a row repeated in a table. Slices are allocated based on a simple interpretation of the additive specification with indexes identifying slice order.
 
 * 4_Export_Slice_Geojson - This tool will take an input crosswalk feature class and export it into a geojson file that complies which the slice based shared-row specification. 
+
+Other Tools
+
+Additional GIS/CityEngine Tools in this toolbox include:
+
+* Additive Spec to CityEngine Export - Export a feature class with Complete Street Rule attributes for CityEngine based on the Additive Spec. 

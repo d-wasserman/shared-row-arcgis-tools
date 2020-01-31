@@ -1,6 +1,8 @@
 # Shared-ROW Generation ArcGIS Tools 
 This repository contains multiple ArcGIS geoprocessing tools that can aid in the creation of shared-row databases (field additions with domains for example), and provide planning product examples that can be derived from its deployment. It also provides some sample applications for how to convert the specification into CityEngine ready street files for import. 
 
+## Core GIS Tool Breakdown
+
 The tools contained within this repository are documented below. 
 
 * 0_Consolidate_Centerline - This tool is intended to help prepare line files for the shared-row-specification by collapsing dual carriageways into single lines. This tool uses a merged feature table to enable statistics on sums, averages, and first statistics on the collapsed lines so that relevant attributes can be preserved and combined appropriately. 
@@ -13,7 +15,7 @@ The tools contained within this repository are documented below.
 
 * 4_Export_Slice_Geojson - This tool will take an input crosswalk feature class and export it into a geojson file that complies which the slice based shared-row specification. 
 
-Other Tools
+### Other Tools
 
 Additional GIS/CityEngine Tools in this toolbox include:
 

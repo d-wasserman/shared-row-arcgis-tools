@@ -1,0 +1,3 @@
+﻿Name,Name_Shp,Type,Optional
+sharedstreetid,SSID,TEXT,0
+slices,slices,TEXT,0

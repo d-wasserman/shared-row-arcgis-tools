@@ -1,5 +1,5 @@
 # Shared-ROW Generation ArcGIS Tools 
-This repository contains multiple ArcGIS geoprocessing tools that can aid in the creation of (shared-row)[https://github.com/d-wasserman/shared-row/blob/master/README.md] databases (field additions with domains for example), and provide planning product examples that can be derived from its deployment. It also provides some sample applications for how to convert the specification into CityEngine ready street files for import. 
+This repository contains multiple ArcGIS geoprocessing tools that can aid in the creation of [shared-row](https://github.com/d-wasserman/shared-row/blob/master/README.md) databases (field additions with domains for example), and provide planning product examples that can be derived from its deployment. It also provides some sample applications for how to convert the specification into CityEngine ready street files for import. 
 
 ![Shared-ROW-Generation Sample](project/asset/sharedrowgenerationsample.png)
 

@@ -21,4 +21,6 @@ The tools contained within this repository are documented below.
 
 Additional GIS/CityEngine Tools in this toolbox include:
 
+* Cross Section Profiler - Will intersect and then use linear referencing along a reference line to identify all the entities along it and its order.
+
 * Additive Spec to CityEngine Export - Export a feature class with Complete Street Rule attributes for CityEngine based on the Additive Spec. 

@@ -24,6 +24,7 @@
 import os
 import arcpy
 import sharedrowlib as srl
+import pandas as pd
 
 def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table):
     """Creates a cross-sectional profile of references intersecting with a line whisker feature class. The function uses a
@@ -32,6 +33,8 @@ def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table)
     saves the results to a table.
 
     :param whisker_fc: Input line feature class representing the profiling line.
+      This line should be able to represent the cross section from one side to the other and use linear referencing on the
+        reference features to determine relative positions along them. 
     :param reference_fc: Input point, polyline, or polygon feature class representing the references to be profiled.
     :param snap_distance: The distance in linear units to snap centroids of profiling features.
     :param out_table: Output table for storing the cross-sectional profile results.
@@ -58,7 +61,7 @@ def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table)
         arcpy.Snap_edit(centroid_fc, [[whisker_fc, "EDGE", snap_distance]])
 
         arcpy.AddMessage("Adding fields to store distance along the whisker and sort rank...")
-        arcpy.AddField_management(centroid_fc, "Whisker_ID", "LONG")
+        arcpy.AddField_management(centroid_fc, "Profile_ID", "LONG")
         arcpy.AddField_management(centroid_fc, "Distance", "DOUBLE")
         arcpy.AddField_management(centroid_fc, "SortRank", "LONG")
         arcpy.AddMessage("Creating Near Table for the points along the whiskers...")
@@ -72,6 +75,7 @@ def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table)
 
         # Create a SearchCursor to read whisker features
         arcpy.AddMessage("Calculating distance and sort rank along the whiskers...")
+        final_update_df = None
         with arcpy.da.SearchCursor(whisker_fc, ["OID@", "SHAPE@"]) as whisker_cursor:
             for whisker_id, whisker_shape in whisker_cursor:
                 # Filter Near Table DataFrame to the current whisker
@@ -83,22 +87,28 @@ def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table)
                     point_geom = arcpy.PointGeometry(arcpy.Point(row["NEAR_X"], row["NEAR_Y"]), whisker_fc)
                     distance = whisker_shape.measureOnLine(point_geom)
                     distances.append(distance)
+                filtered_df["Profile_ID"] = whisker_id
                 filtered_df["Distance"] = distances
                 filtered_df.sort_values(by=["Distance"],inplace=True)
                 filtered_df["SortRank"] = range(len(filtered_df))
-                for index, row in filtered_df.iterrows():
-                    in_fid = row["IN_FID"]
-                    distance = row["Distance"]
-                    index = row["SortRank"]
-                    # Update Distance and SortRank fields in output_points for the current point
-                    pt_oid = arcpy.Describe(centroid_fc).OIDFieldName
-                    # TODO - replace update cursor with complete write to dataframe including the points. Export to FC using NP functions or ArcGIS API.
-                    with arcpy.da.UpdateCursor(centroid_fc, ["OID@", "Whisker_ID","Distance", "SortRank"],where_clause= "{0}={1}".format(pt_oid,in_fid)) as point_cursor:
-                        for point_row in point_cursor: # Should be one
-                            point_row[1] = whisker_id
-                            point_row[2] = distance
-                            point_row[3] = index + 1
-                            point_cursor.updateRow(point_row)
+                if final_update_df is None:
+                    final_update_df = filtered_df
+                else:
+                    final_update_df = pd.concat([final_update_df, filtered_df])
+        arcpy.AddMessage("Writing results to profiled points...")
+        final_update_df.set_index(["IN_FID"], inplace=True)
+        # TODO - consider different write options. 
+        with arcpy.da.UpdateCursor(centroid_fc, ["OID@", "Profile_ID","Distance", "SortRank"]) as point_cursor:
+            for point_row in point_cursor: # Should be one
+                pt_oid = point_row[0]
+                whisker_id = final_update_df.at[pt_oid,"Profile_ID"]
+                distance = final_update_df.at[pt_oid,"Distance"]
+                index = final_update_df.at[pt_oid,"SortRank"]
+                # Update Distance and SortRank fields in output_points for the current point
+                point_row[1] = whisker_id
+                point_row[2] = distance
+                point_row[3] = index + 1
+                point_cursor.updateRow(point_row)
         
         # Save the output feature class to a table
         arcpy.AddMessage("Sorting output points by whisker ID and sort rank...")

@@ -32,19 +32,33 @@ import sharedrowlib as srl
 def add_additive_specification_fields_by_table(in_fc, csv, number_of_expandable_lanes=4, field_name_col="Name",
                                                type_col="Type", shp_field_name="Name_Shp", optional_col="Optional",
                                                optional_bool=True, validate=False):
-    """This function will add additive shared-row specification fields based on a CSV. Uses Pandas.
-    :param - in_fc - the input feature class that will have all the shared-row fields added to it.
-    :param - csv - csv with field specification fields defined
-    :param - number_of_expandable_lanes - while the minimum number of expandable lanes (through lanes) is 4, this
-    parameter will enable the addition of more through lanes. This parameter does nothing if optional fields are not
-    added
-    :param - field_name_col - column of csv with field names being added
-    :param - type_col - column of csv with the field type being added
-    :param - shp_field_name - column of csv with field name to use if the file is a shapefile
-    :param - optional_col - column of csv with a column identifying optional fields with a 1 and
-    required fields as a 0
-    :param - optional_bool - if true, optional fields will be added
-    :param - validate - if true, all fields will go through a validate field routine
+    """Add Additive Shared-Row Specification fields to a feature class from a CSV definition.
+
+    Parameters
+    ----------
+    in_fc : str
+        Path to the input feature class that will have shared-row fields added.
+    csv : str
+        Path to the CSV file defining the fields to add.
+    number_of_expandable_lanes : int, optional
+        Total number of through lane fields to create. The specification defines 4 by
+        default; values above 4 expand the through lane fields (_5, _6, ...) up to this
+        number. Has no effect if optional fields are not added. Default 4.
+    field_name_col : str, optional
+        Column in the CSV containing field names. Default "Name".
+    type_col : str, optional
+        Column in the CSV containing field types. Default "Type".
+    shp_field_name : str, optional
+        Column in the CSV with shapefile-compatible field names, used when in_fc is a
+        .shp file. Default "Name_Shp".
+    optional_col : str, optional
+        Column in the CSV marking optional fields with 1 and required fields with 0.
+        Default "Optional".
+    optional_bool : bool, optional
+        If True, optional fields will be added in addition to required ones. Default True.
+    validate : bool, optional
+        If True, all field names are validated against the workspace before being added.
+        Default False.
     """
     try:
         arcpy.env.overwriteOutput = True

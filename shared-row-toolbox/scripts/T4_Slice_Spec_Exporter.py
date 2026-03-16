@@ -30,12 +30,26 @@ import json
 
 
 def generate_slice_spec_geojson_file(input_features, sharedstreetid, slice_fields_csv, output_geojson):
-    """This function will create a slice specification compliant geojson file.
-    :param - input_features - feature class that has all of the fields from the crosswalk file
-    :param - sharedstreetid - unique street ID as defined by SharedStreets.
-    :param - slice_fields_csv - the csv with fields required for the slice specification compliant geojson.
-    :param - output_geojson - output slice based geojson where each line geometry has slices as properties
-    :return - output_geojson -path to output geojson
+    """Export a crosswalk feature class to a slice specification-compliant GeoJSON file.
+
+    Groups crosswalk rows by shared street ID, aggregates all slice records for each
+    street into a JSON property, and exports the result to a formatted WGS84 GeoJSON file.
+
+    Parameters
+    ----------
+    input_features : str
+        Path to the feature class containing crosswalk/slice fields.
+    sharedstreetid : str
+        Field name used as the unique street identifier for grouping slices.
+    slice_fields_csv : str
+        Path to the CSV defining the fields required by the slice specification.
+    output_geojson : str
+        File path for the output GeoJSON file.
+
+    Returns
+    -------
+    str
+        Path to the output GeoJSON file.
     """
     try:
         arcpy.env.overwriteOutput = True

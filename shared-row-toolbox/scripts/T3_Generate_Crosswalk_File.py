@@ -33,16 +33,35 @@ import json
 
 
 def center_editor_function(insert_cursor, center_width, center_type, shape, shared_street_id, slice_start=0):
-    """Given an insert cursor object, a center_width, shape_length, and center_type - this function will convert additive
-    values into multiple slices with the appropriate tag values associated with them based on the additive
-    specification's relationship to the slice specification.
-    @:param- insert_cursor - cursor to add multiple slices too
-    @:param - center_width - width of the total center allocation space to base approximations on
-    @:param - center_type - type of center allocation
-    @:param - shape - geometry object being used
-    @:param - shared_street_id - centerline shared street id
-    @:param - slice_start - the last slice id encountered.
-    @:returns center_boolean, slice_end """
+    """Convert an Additive center lane allocation into one or more slice rows.
+
+    Interprets the center_type and writes the appropriate slice geometries to the
+    insert cursor. Supported types are ``turn_lane``, ``median_turn_lane``, and
+    ``boulevard``.
+
+    Parameters
+    ----------
+    insert_cursor : arcpy.da.InsertCursor
+        Open insert cursor on the output crosswalk feature class.
+    center_width : float
+        Total width of the center allocation space in map units.
+    center_type : str
+        Type of center allocation. One of ``"turn_lane"``, ``"median_turn_lane"``,
+        or ``"boulevard"``.
+    shape : arcpy.Geometry
+        Geometry object for the current street segment.
+    shared_street_id : str or int
+        SharedStreets ID for the current centerline.
+    slice_start : int, optional
+        The last slice ID assigned before this function is called. Default 0.
+
+    Returns
+    -------
+    center_set : bool
+        True if slices were inserted for the center lane, False otherwise.
+    slice_end : int
+        The next available slice ID after this function completes.
+    """
     center_dict = {"end_depth": None, "end_movements_allowed": "left"}
     shape_length = shape.getLength(units="METERS")
     dist_threshold = shape_length > 200
@@ -103,16 +122,31 @@ def center_editor_function(insert_cursor, center_width, center_type, shape, shar
 
 def generate_crosswalk_file(in_features, output_features, slice_fields_csv, additive_spec_slice_order,
                             zone_meta_dict={}):
-    """This function will add additive shared-row specification domains for categorical fields
-     based on a CSV. Uses Pandas. Depends on a function center_editor_function near top.
-    :param - in_features - feature class that has additive specification fields for cross-walk creation
-    :param - output_features - crosswalk feature class with indices indicating slices in an output feature class
-    :param - slice_fields_csv - csv with fields to be added for the crosswalk file
-    :param - additive_spec_slice_order - list of fields going from left to right to be added to the slice specification
-    :param - zone_meta_dict - nested dictionaries - of key-value pairs where keys are additive width fields, and values
-    are dictionaries indicating the values to fill the crosswalk type, heights, directions, etc. It takes the form of:
-    {additive_field: {"type":value,"height":0,...}
-    :return - feature class where each geometry is copied and slices named based on additive specification
+    """Convert an Additive Specification feature class into a crosswalk (slice) feature class.
+
+    Each input line geometry is repeated as one row per non-zero-width slice, ordered
+    left to right. Center lane fields are handled by ``center_editor_function``.
+
+    Parameters
+    ----------
+    in_features : str
+        Path to the feature class with Additive Specification fields.
+    output_features : str
+        Path for the output crosswalk feature class where each row represents one slice.
+    slice_fields_csv : str
+        Path to the CSV defining the fields to add to the crosswalk output.
+    additive_spec_slice_order : list of str
+        Ordered list of Additive Specification field names from left to right across the
+        right-of-way.
+    zone_meta_dict : dict, optional
+        Nested dictionary mapping each Additive width field name to a dictionary of slice
+        metadata values (e.g. type, height, direction, material, meta). Takes the form
+        ``{additive_field: {"type": value, "height": 0, ...}}``. Default {}.
+
+    Returns
+    -------
+    str
+        Path to the output crosswalk feature class.
     """
     try:
         arcpy.env.overwriteOutput = True

@@ -29,12 +29,20 @@ import sharedrowlib as srl
 
 
 def generate_complete_street_attributes(input_features, output_features, null_value = 0):
-    """
-    Create complete street rule attributes from the Additive Shared Spec
-    @:param - input_features - input feature class with additive spec attributes.
-    @:param - output_features -  output feature class with complete street attributes
-    @:param - null_value = 0 - int - the value used in place of null values
+    """Create Complete Street Rule attributes from the Additive Shared Spec.
 
+    Copies the input feature class, adds Complete Street Rule numeric and text
+    fields, populates them from the Additive Specification fields, then removes
+    all original Additive fields from the output.
+
+    Parameters
+    ----------
+    input_features : str
+        Path to the input feature class with Additive Spec attributes.
+    output_features : str
+        Path to the output feature class with Complete Street Rule attributes.
+    null_value : int or float, optional
+        Value used to replace nulls in numeric fields. Default 0.
     """
     try:
         arcpy.env.overwriteOutput = True

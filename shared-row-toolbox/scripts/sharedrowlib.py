@@ -37,9 +37,23 @@ except:
 
 # Function Definitions
 def func_report(function=None, reportBool=False):
-    """This decorator function is designed to be used as a wrapper with other functions to enable basic try and except
-     reporting (if function fails it will report the name of the function that failed and its arguments. If a report
-      boolean is true the function will report inputs and outputs of a function.-David Wasserman"""
+    """Decorator for wrapping functions with basic try/except reporting.
+
+    If a function fails, reports the function name and its arguments. If
+    reportBool is True, also logs inputs and outputs on success.
+
+    Parameters
+    ----------
+    function : callable, optional
+        The function to wrap. If omitted, returns a decorator waiting for the function.
+    reportBool : bool, optional
+        If True, print function name, inputs, and outputs on success. Default False.
+
+    Returns
+    -------
+    callable
+        Wrapped function with error reporting.
+    """
 
     def func_report_decorator(function):
         def func_wrapper(*args, **kwargs):
@@ -67,9 +81,26 @@ def func_report(function=None, reportBool=False):
 
 
 def arc_tool_report(function=None, arcToolMessageBool=False, arcProgressorBool=False):
-    """This decorator function is designed to be used as a wrapper with other GIS functions to enable basic try and except
-     reporting (if function fails it will report the name of the function that failed and its arguments. If a report
-      boolean is true the function will report inputs and outputs of a function.-David Wasserman"""
+    """Decorator for wrapping ArcGIS functions with try/except reporting via arcpy messages.
+
+    If a function fails, reports the function name and arguments via arcpy.AddMessage.
+    If arcToolMessageBool is True, also logs inputs and outputs on success.
+    If arcProgressorBool is True, updates the ArcGIS progressor label.
+
+    Parameters
+    ----------
+    function : callable, optional
+        The function to wrap. If omitted, returns a decorator waiting for the function.
+    arcToolMessageBool : bool, optional
+        If True, send function name, inputs, and outputs to arcpy messages on success. Default False.
+    arcProgressorBool : bool, optional
+        If True, update the ArcGIS progressor label with function details on success. Default False.
+
+    Returns
+    -------
+    callable
+        Wrapped function with ArcGIS error and progress reporting.
+    """
 
     def arc_tool_report_decorator(function):
         def func_wrapper(*args, **kwargs):
@@ -105,8 +136,15 @@ def arc_tool_report(function=None, arcToolMessageBool=False, arcProgressorBool=F
 
 @arc_tool_report
 def arc_print(string, progressor_Bool=False):
-    """ This function is used to simplify using arcpy reporting for tool creation,if progressor bool is true it will
-    create a tool label."""
+    """Print a message to the ArcGIS message window and the console.
+
+    Parameters
+    ----------
+    string : any
+        The message to print. Will be cast to str.
+    progressor_Bool : bool, optional
+        If True, also update the ArcGIS progressor label. Default False.
+    """
     casted_string = str(string)
     if progressor_Bool:
         arcpy.SetProgressorLabel(casted_string)
@@ -119,8 +157,20 @@ def arc_print(string, progressor_Bool=False):
 
 @arc_tool_report
 def field_exist(featureclass, fieldname):
-    """ArcFunction
-     Check if a field in a feature class field exists and return true it does, false if not.- David Wasserman"""
+    """Check whether a field exists in a feature class.
+
+    Parameters
+    ----------
+    featureclass : str
+        Path to the feature class or table.
+    fieldname : str
+        Name of the field to check.
+
+    Returns
+    -------
+    bool
+        True if the field exists, False otherwise.
+    """
     fieldList = arcpy.ListFields(featureclass, fieldname)
     fieldCount = len(fieldList)
     if (fieldCount >= 1) and fieldname.strip():  # If there is one or more of this field return true
@@ -132,8 +182,33 @@ def field_exist(featureclass, fieldname):
 @arc_tool_report
 def add_new_field(in_table, field_name, field_type, field_precision="#", field_scale="#", field_length="#",
                   field_alias="#", field_is_nullable="#", field_is_required="#", field_domain="#"):
-    """ArcFunction
-    Add a new field if it currently does not exist. Add field alone is slower than checking first.- David Wasserman"""
+    """Add a new field to a table only if it does not already exist.
+
+    Checking existence before calling AddField is faster than calling AddField unconditionally.
+
+    Parameters
+    ----------
+    in_table : str
+        Path to the input table or feature class.
+    field_name : str
+        Name of the field to add.
+    field_type : str
+        ArcGIS field type (e.g. "TEXT", "DOUBLE", "LONG").
+    field_precision : int or str, optional
+        Field precision. Default "#".
+    field_scale : int or str, optional
+        Field scale. Default "#".
+    field_length : int or str, optional
+        Field length. Default "#".
+    field_alias : str, optional
+        Field alias. Default "#".
+    field_is_nullable : str, optional
+        Whether the field allows nulls. Default "#".
+    field_is_required : str, optional
+        Whether the field is required. Default "#".
+    field_domain : str, optional
+        Domain name to assign to the field. Default "#".
+    """
     if field_exist(in_table, field_name):
         print(field_name + " Exists")
         arcpy.AddMessage(field_name + " Exists")
@@ -148,7 +223,20 @@ def add_new_field(in_table, field_name, field_type, field_precision="#", field_s
 
 @arc_tool_report
 def validate_df_names(dataframe, output_feature_class_workspace):
-    """Returns pandas dataframe with all col names renamed to be valid arcgis table names."""
+    """Rename all DataFrame columns to be valid ArcGIS field names.
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        The DataFrame whose column names will be validated.
+    output_feature_class_workspace : str
+        Workspace path used by arcpy.ValidateFieldName to check name validity.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with columns renamed to ArcGIS-compatible names.
+    """
     new_name_list = []
     old_names = dataframe.columns.names
     for name in old_names:
@@ -160,21 +248,43 @@ def validate_df_names(dataframe, output_feature_class_workspace):
 
 
 def construct_index_dict(field_names, index_start=0):
-    """This function will construct a dictionary used to retrieve indexes for cursors.
-    :param - field_names - list of strings (field names) to load as keys into a dictionary
-    :param - index_start - an int indicating the beginning index to start from (default 0).
-    :return - dictionary in the form of {field:index,...}"""
+    """Build a dictionary mapping field names to their cursor row index positions.
+
+    Parameters
+    ----------
+    field_names : list of str
+        Ordered list of field names matching the cursor field order.
+    index_start : int, optional
+        Starting index value. Default 0.
+
+    Returns
+    -------
+    dict
+        Dictionary in the form ``{field_name: index, ...}``.
+    """
     dict = {str(field): index for index, field in enumerate(field_names, start=index_start)}
     return dict
 
 
 def retrieve_row_values(row, field_names, index_dict):
-    """This function will take a given list of field names, cursor row, and an index dictionary provide
-    a tuple of passed row values.
-    :param - row - cursor row
-    :param - field_names -list of fields and their order to retrieve
-    :param - index_dict - cursors dictionary in the form of {field_name : row_index}
-    :return - list of values from cursor"""
+    """Extract specific field values from a cursor row using an index dictionary.
+
+    Parameters
+    ----------
+    row : tuple
+        A cursor row from an arcpy SearchCursor or UpdateCursor.
+    field_names : list of str
+        Ordered list of field names whose values should be retrieved.
+    index_dict : dict
+        Dictionary mapping field names to row index positions, as produced by
+        ``construct_index_dict``.
+
+    Returns
+    -------
+    list
+        Values from the cursor row in the order specified by field_names.
+        Fields not found in index_dict return None.
+    """
     row_values = []
     for field in field_names:
         index = index_dict.get(field, None)
@@ -189,12 +299,22 @@ def retrieve_row_values(row, field_names, index_dict):
 
 @arc_tool_report
 def arcgis_table_to_df(in_fc, input_fields=None, query=""):
-    """Function will convert an arcgis table into a pandas dataframe with an object ID index, and the selected
-    input fields using an arcpy.da.SearchCursor.
-    :param - in_fc - input feature class or table to convert
-    :param - input_fields - fields to input to a da search cursor for retrieval
-    :param - query - sql query to grab appropriate values
-    :returns - pandas.DataFrame"""
+    """Convert an ArcGIS table or feature class to a pandas DataFrame using a SearchCursor.
+
+    Parameters
+    ----------
+    in_fc : str
+        Path to the input feature class or table.
+    input_fields : list of str, optional
+        Fields to retrieve. If None, all fields are included.
+    query : str, optional
+        SQL where clause to filter rows. Default "".
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame indexed by the OID field with the requested columns.
+    """
     OIDFieldName = arcpy.Describe(in_fc).OIDFieldName
     if input_fields:
         final_fields = [OIDFieldName] + input_fields
@@ -207,8 +327,26 @@ def arcgis_table_to_df(in_fc, input_fields=None, query=""):
 
 @arc_tool_report
 def arcgis_table_to_dataframe(in_fc, input_fields, query="", skip_nulls=False, null_values=None):
-    """Function will convert an arcgis table into a pandas dataframe with an object ID index, and the selected
-    input fields. Uses TableToNumPyArray to get initial data."""
+    """Convert an ArcGIS table or feature class to a pandas DataFrame using TableToNumPyArray.
+
+    Parameters
+    ----------
+    in_fc : str
+        Path to the input feature class or table.
+    input_fields : list of str
+        Fields to retrieve.
+    query : str, optional
+        SQL where clause to filter rows. Default "".
+    skip_nulls : bool, optional
+        If True, skip rows with null values. Default False.
+    null_values : scalar or dict, optional
+        Value(s) used to replace nulls. Default None.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame indexed by the OID field with the requested columns.
+    """
     OIDFieldName = arcpy.Describe(in_fc).OIDFieldName
     if input_fields:
         final_fields = [OIDFieldName] + input_fields
@@ -222,17 +360,34 @@ def arcgis_table_to_dataframe(in_fc, input_fields, query="", skip_nulls=False, n
 @arc_tool_report
 def add_fields_from_csv(in_fc, csv_path, field_name_col="Name", type_col="Type", shp_field_name="Name_Shp",
                         optional_col="Optional", optional_bool=True, validate=False):
-    """Add fields to a feature class using arcpy based on the field names, types, shapefile name, and optional
-    column in the CSV.
-    :param - in_fc - input feature class to add fields to
-    :param - csv_path - path to the csv with fields to add
-    :param - field_name_col - name of column with field names
-    :param - type_col - name of column with field types
-    :param - shp_field_name - name of the field to use if the file is a shapefile
-    :param - optional_col - the column identify if a field is optional with a 1 and a 0 for not.
-    :param - optional_bool - if true add optional fields
-    :param - validate- optional boolean controls whether field names are validated
-     :return - list of fields added"""
+    """Add fields to a feature class based on a CSV field specification.
+
+    Parameters
+    ----------
+    in_fc : str
+        Path to the input feature class to add fields to.
+    csv_path : str
+        Path to the CSV file defining fields to add.
+    field_name_col : str, optional
+        Column in the CSV containing field names. Default "Name".
+    type_col : str, optional
+        Column in the CSV containing field types. Default "Type".
+    shp_field_name : str, optional
+        Column in the CSV with shapefile-compatible field names, used when in_fc is a .shp file.
+        Default "Name_Shp".
+    optional_col : str, optional
+        Column in the CSV marking optional fields with 1 and required fields with 0.
+        Default "Optional".
+    optional_bool : bool, optional
+        If True, add optional fields in addition to required ones. Default True.
+    validate : bool, optional
+        If True, validate field names against the workspace before adding. Default False.
+
+    Returns
+    -------
+    list of str
+        Names of the fields that were added.
+    """
     workspace = os.path.dirname(in_fc)
     df = pd.read_csv(csv_path)
     new_fields = []
@@ -255,10 +410,21 @@ def add_fields_from_csv(in_fc, csv_path, field_name_col="Name", type_col="Type",
 
 # Additive Shared Row Specific Functions
 def get_additive_lane_count(non_zero_width_fields, side_filter=None):
-    """This function will determine the number of lanes on a street given a list of tuples with additive field names
-    and values. If a side is specified ("left" or "right"), it will only return the lane count for that side.
-    :param - non_zero_width_fields - a list of tuples in the form [(field_name,field_value),...]
-    :param - side_filter = either "right" or "left". Filters count based ont hat. """
+    """Count the number of through lanes from a list of additive specification field tuples.
+
+    Parameters
+    ----------
+    non_zero_width_fields : list of tuple
+        List of ``(field_name, field_value)`` pairs for fields with non-zero widths.
+    side_filter : str, optional
+        Restrict the count to one side. Pass "left" or "right". If None, counts all
+        through lanes on both sides. Default None.
+
+    Returns
+    -------
+    int
+        Number of through lanes matching the filter criteria.
+    """
     lane_count = 0
     through_lane_check = "Through_Lane"
     if side_filter is None:

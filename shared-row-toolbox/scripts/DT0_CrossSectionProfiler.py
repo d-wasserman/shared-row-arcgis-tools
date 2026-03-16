@@ -27,18 +27,29 @@ import sharedrowlib as srl
 import pandas as pd
 
 def cross_sectional_profiler(whisker_fc, reference_fc, snap_distance, out_table):
-    """Creates a cross-sectional profile of references intersecting with a line whisker feature class. The function uses a
-    Feature To Point operation to convert intersection points to point features and snaps the points to the nearest
-    profiling line. The function then calculates the location and distance of each point along the profiling line and
-    saves the results to a table.
+    """Create a cross-sectional profile of features intersecting a whisker line feature class.
 
-    :param whisker_fc: Input line feature class representing the profiling line.
-      This line should be able to represent the cross section from one side to the other and use linear referencing on the
-        reference features to determine relative positions along them. 
-    :param reference_fc: Input point, polyline, or polygon feature class representing the references to be profiled.
-    :param snap_distance: The distance in linear units to snap centroids of profiling features.
-    :param out_table: Output table for storing the cross-sectional profile results.
-    :return: out_table
+    Intersects the whisker and reference feature classes to generate intersection
+    points, snaps them to the nearest whisker edge, then calculates each point's
+    distance along the whisker and assigns a sequential sort rank.
+
+    Parameters
+    ----------
+    whisker_fc : str
+        Path to the input line feature class representing the profiling (whisker) line.
+        Each whisker should span the full cross-section so that linear referencing can
+        determine the relative position of intersecting reference features.
+    reference_fc : str
+        Path to the input point, polyline, or polygon feature class to be profiled.
+    snap_distance : str or float
+        Distance (with units) used to snap intersection centroids to the nearest whisker edge.
+    out_table : str
+        Path for the output feature class storing the cross-sectional profile results.
+
+    Returns
+    -------
+    str
+        Path to the output feature class (out_table).
     """
     try:
         # Set overwrite output to True to overwrite existing output files

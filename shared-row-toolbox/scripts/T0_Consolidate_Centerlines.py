@@ -31,23 +31,38 @@ import sharedrowlib as srl
 
 def consolidate_centerline(in_fc, out_fc, out_consolidation_table, merge_field, merge_distance, sum_fields=[],
                            mean_fields=[], first_fields=[], concat_fields=[], character_field=None):
-    """This function collapse a center line and compile collapsed fields using a combination of the the
-    MergeDividedRoads tool in ArcGIS and pandas manipulation of its merge table.
-    :param - in_fc - the input feature class that will be consolidated
-    :param - out_fc - output consolidated feature class
-    :param - out_consolidation_table - defaults to in memory, but the output table of consolidated lines
-    :param - merge_field - usually a oneway field, this field identifies segments to merge with a 1, and locks those
-    with a zero.
-    :param - merge_distance - distance apart a line can be to consider for consolidation (avoid larger than a block)
-    :param - sum_fields - based on the consolidation table created by the MergeDividedRoads tool, these fields will be
-    attempted to be summed in a new field based on the two matching collapsed segments
-    :param - mean_fields - based on the consolidation table created by the MergeDividedRoads tool, these fields will be
-    attempted to be averaged in a new field based on the two matching collapsed segments.
-    :param - first_fields - based on the consolidation table created by the MergeDividedRoads tool, these fields will be
-    attempted to be first value found in a new field based on the two matching collapsed segments.
-    :param - concat_fields - for text or categorical data these file
-    :param - character_field - this field assists the MergeDividedRoads tool to merge roads appropriately. See
-    ArcGIS DOCs.
+    """Collapse dual carriageways and compile field statistics using MergeDividedRoads.
+
+    Uses the ArcGIS MergeDividedRoads cartography tool to consolidate divided roads,
+    then uses the output consolidation table and pandas to aggregate attribute fields
+    from the original segments onto the collapsed centerlines.
+
+    Parameters
+    ----------
+    in_fc : str
+        Path to the input feature class to consolidate.
+    out_fc : str
+        Path for the output consolidated feature class.
+    out_consolidation_table : str
+        Path for the consolidation table produced by MergeDividedRoads. Can be in_memory.
+    merge_field : str
+        Field used to control merging. A value of 1 allows merging; 0 locks the segment.
+        Typically a oneway field.
+    merge_distance : str or float
+        Maximum distance between lines to consider for consolidation. Should be no larger
+        than one city block to avoid over-merging.
+    sum_fields : list of str, optional
+        Fields whose values will be summed across collapsed segments. Default [].
+    mean_fields : list of str, optional
+        Fields whose values will be averaged across collapsed segments. Default [].
+    first_fields : list of str, optional
+        Fields for which the first encountered value will be kept. Default [].
+    concat_fields : list of str, optional
+        Text or categorical fields whose values will be concatenated with a semicolon
+        separator across collapsed segments. Default [].
+    character_field : str, optional
+        Field that assists MergeDividedRoads in merging roads appropriately. See ArcGIS
+        documentation for details. Default None.
     """
     try:
         arcpy.env.overwriteOutput = True

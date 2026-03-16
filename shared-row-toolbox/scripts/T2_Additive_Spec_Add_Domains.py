@@ -34,18 +34,36 @@ def add_additive_specification_coded_domains_to_gdb(in_gdb, in_features, csv, pr
                                                     domain_desc_col="DomainDescription", field_type_col="FieldType",
                                                     domain_type_col="DomainType", coded_value_col="CodedValues",
                                                     value_descrip_col="ValueDescriptions"):
-    """This function will add additive shared-row specification domains for categorical fields
-     based on a CSV. Uses Pandas.
-    :param - in_gdb - input geodatabase to add domains to
-    :param - in_features - optional input that is used to assign domains to feature class is chosen.
-    :param - csv - csv with field specification domains defined
-    :param - prepended_name - name prepended to each domain
-    :param = field_name_col - name of column in csv with used field names
-    :param - domain_desc_col - name of column in csv with domain descriptions
-    :param - field_type_col - name of column in csv with field types
-    :param - domain_type_col - name of column in csv with domain types (CODED vs RANGE)
-    :param - coded_value_col - name of column in csv with a semi-colon delimited list of possible values
-    :param - value_descript_col - name of column in csv with semi-colon delimited list of possible values descriptions
+    """Add coded value domains for Additive Shared-Row Specification categorical fields.
+
+    Reads domain definitions from a CSV and creates coded value domains in the target
+    geodatabase. Optionally assigns the created domains to matching fields in a feature class.
+
+    Parameters
+    ----------
+    in_gdb : str
+        Path to the geodatabase to add domains to.
+    in_features : str
+        Path to the feature class to assign domains to. Pass an empty string or non-existent
+        path to skip domain assignment.
+    csv : str
+        Path to the CSV file defining domain names, types, coded values, and descriptions.
+    prepended_name : str, optional
+        Prefix added to each domain name in the form ``{prepended_name}_{field_name}``.
+        Default "srs_additive".
+    field_name_col : str, optional
+        Column in the CSV containing the field names. Default "FieldName".
+    domain_desc_col : str, optional
+        Column in the CSV containing domain descriptions. Default "DomainDescription".
+    field_type_col : str, optional
+        Column in the CSV containing field types. Default "FieldType".
+    domain_type_col : str, optional
+        Column in the CSV containing domain types (CODED or RANGE). Default "DomainType".
+    coded_value_col : str, optional
+        Column in the CSV with a semicolon-delimited list of coded values. Default "CodedValues".
+    value_descrip_col : str, optional
+        Column in the CSV with a semicolon-delimited list of value descriptions.
+        Default "ValueDescriptions".
     """
     try:
         arcpy.env.overwriteOutput = True
@@ -106,16 +124,25 @@ def add_additive_specification_coded_domains_to_gdb(in_gdb, in_features, csv, pr
 
 def add_additive_specification_range_domain_to_gdb(in_gdb, in_features, fields, domain_name, field_type="DOUBLE",
                                                    range_min=0, range_max=25):
-    """This function will add additive shared-row specification domains for categorical fields
-        based on a CSV. Uses Pandas.
-       :param - in_gdb - input geodatabase to add domains to
-       :param - in_features - optional input that is used to assign domains to feature class is chosen.
-       :param - domain_name - name of new range domain
-       :param - field_type - field type used by domains
-       :param - fields - fields to assign domains too
-       :param - range_min - the minimum value allowed by the range domain
-       :param  - range_max - the maximum value allowed by the range domain
-       """
+    """Add a numeric range domain to a geodatabase and assign it to specified fields.
+
+    Parameters
+    ----------
+    in_gdb : str
+        Path to the geodatabase to add the domain to.
+    in_features : str
+        Path to the feature class to assign the domain to.
+    fields : list of str
+        Field names to assign the range domain to.
+    domain_name : str
+        Name of the new range domain.
+    field_type : str, optional
+        ArcGIS field type for the domain (e.g. "DOUBLE", "LONG"). Default "DOUBLE".
+    range_min : int or float, optional
+        Minimum value allowed by the range domain. Default 0.
+    range_max : int or float, optional
+        Maximum value allowed by the range domain. Default 25.
+    """
     try:
         domain_description = str(domain_name) + "_Range_Domain"
         try:
